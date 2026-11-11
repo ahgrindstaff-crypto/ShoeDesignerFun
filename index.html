@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sneaker Lab</title>
+<style>
+:root{
+  --bg:#f6f4ef; --panel:#ffffff; --ink:#1b1b1b; --muted:#6b6b6b; --line:#e4dfd4;
+  --accent:#ff5a36; --accent-ink:#ffffff; --blue:#2f7cff; --blue-soft:#eef4ff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;}
+.app{max-width:1280px;margin:0 auto;padding:16px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;margin-bottom:14px}
+.brand h1{margin:0;font-size:28px;font-weight:900;letter-spacing:-.5px}
+.brand h1 span{color:var(--accent)}
+.brand p{margin:2px 0 0;color:var(--muted);font-size:14px}
+.name{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700}
+.name input{font:inherit;font-weight:500;padding:8px 10px;border:2px solid var(--line);border-radius:10px;width:230px;background:#fff;color:var(--ink)}
+.name input:focus{outline:none;border-color:var(--blue)}
+.grid{display:grid;grid-template-columns:210px minmax(0,1fr) 280px;gap:14px;align-items:start}
+.card{background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:14px}
+.card + .card{margin-top:14px}
+.card h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 10px}
+.hint{font-size:12.5px;color:var(--muted);margin:8px 0 0;line-height:1.4}
+
+/* parts list */
+.parts{display:flex;flex-direction:column;gap:2px}
+.part-btn{display:flex;align-items:center;gap:9px;width:100%;padding:6px 8px;border:2px solid transparent;border-radius:10px;
+  background:none;font:inherit;font-size:14px;color:var(--ink);text-align:left;cursor:pointer}
+.part-btn:hover{background:#f3f1ec}
+.part-btn.on{border-color:var(--blue);background:var(--blue-soft)}
+.dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--ink);flex:none}
+
+/* stickers */
+.stickers{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.stk{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border:2px solid var(--line);border-radius:10px;
+  background:#fff;font:inherit;font-size:11px;color:var(--ink);cursor:pointer}
+.stk:hover{border-color:var(--ink)}
+.stk .aa{font-weight:900;font-size:18px;line-height:26px}
+
+/* stage */
+.stage-card{padding:10px;background-color:#fff;
+  background-image:radial-gradient(#e7e2d7 1.2px, transparent 1.2px);background-size:18px 18px}
+#stage svg{display:block;width:100%;height:auto;touch-action:none;user-select:none;-webkit-user-select:none}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.btn{font:inherit;font-size:14px;font-weight:700;padding:9px 13px;border-radius:10px;border:2px solid var(--ink);
+  background:#fff;color:var(--ink);cursor:pointer}
+.btn:hover{background:#f3f1ec}
+.btn:disabled{opacity:.35;cursor:default;background:#fff}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(.95)}
+.btn.small{padding:6px 10px;font-size:13px}
+.btn.danger{border-color:#c92a2a;color:#c92a2a}
+.spacer{flex:1}
+.export h2{margin-bottom:8px}
+.code-box{margin-top:12px}
+.code-box textarea{width:100%;height:140px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;border:2px solid var(--line);
+  border-radius:10px;padding:8px;resize:vertical;background:#fbfaf7;color:var(--ink)}
+
+/* style panel */
+.label{font-size:13px;font-weight:700;margin:12px 0 6px}
+.label:first-of-type{margin-top:0}
+.swatches{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.sw{aspect-ratio:1;border-radius:8px;border:2px solid rgba(0,0,0,.18);cursor:pointer;padding:0}
+.sw.on{outline:3px solid var(--blue);outline-offset:2px;border-color:var(--ink)}
+.picker{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;color:var(--muted)}
+.picker input{width:44px;height:30px;border:2px solid var(--line);border-radius:8px;padding:0;background:#fff;cursor:pointer}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:inherit;font-size:13px;padding:6px 10px;border-radius:999px;border:2px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
+.chip.on{border-color:var(--blue);background:var(--blue-soft);font-weight:700}
+.range{width:100%}
+.text-in{width:100%;font:inherit;padding:8px 10px;border:2px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+.text-in:focus{outline:none;border-color:var(--blue)}
+.row{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;
+  padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;max-width:90vw;text-align:center;z-index:9}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media (max-width:980px){
+  .grid{grid-template-columns:1fr}
+  .name{margin-left:0}
+  .name input{width:100%}
+  .name{width:100%}
+  .parts{flex-direction:row;flex-wrap:wrap}
+  .part-btn{width:auto;border-color:var(--line)}
+  .stickers{grid-template-columns:repeat(8,1fr)}
+  .left{order:2}.center{order:1}.right{order:3}
+}
+@media (max-width:520px){ .stickers{grid-template-columns:repeat(4,1fr)} }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <h1>Sneaker <span>Lab</span></h1>
+      <p>Design a shoe. Export it as a vector. Keep building on it.</p>
+    </div>
+    <label class="name">Design name
+      <input id="nameIn" maxlength="40" placeholder="e.g. Midnight Runner">
+    </label>
+  </header>
+
+  <div class="grid">
+    <!-- LEFT: parts + stickers -->
+    <div class="left">
+      <div class="card">
+        <h2>Shoe parts</h2>
+        <div class="parts" id="parts"></div>
+        <p class="hint">Click a part on the shoe or pick it here.</p>
+      </div>
+      <div class="card">
+        <h2>Add stickers</h2>
+        <div class="stickers" id="stickerAdd"></div>
+        <p class="hint">Drag stickers onto the shoe. Arrow keys nudge.</p>
+      </div>
+    </div>
+
+    <!-- CENTER: stage -->
+    <div class="center">
+      <div class="card stage-card"><div id="stage"></div></div>
+      <div class="toolbar">
+        <button class="btn" id="undoBtn" title="Undo (Ctrl+Z)">↶ Undo</button>
+        <button class="btn" id="redoBtn" title="Redo (Ctrl+Y)">↷ Redo</button>
+        <button class="btn" id="outlineBtn">Outline: On</button>
+        <span class="spacer"></span>
+        <button class="btn" id="randomBtn">🎲 Surprise me</button>
+        <button class="btn" id="resetBtn">Start over</button>
+      </div>
+      <div class="card export" style="margin-top:14px">
+        <h2>Export your design</h2>
+        <div class="toolbar" style="margin-top:0">
+          <button class="btn primary" id="svgBtn">Download SVG (vector)</button>
+          <button class="btn" id="copyBtn">Copy SVG code</button>
+          <button class="btn" id="pngBtn">Download PNG</button>
+          <button class="btn" id="openBtn">Open SVG in new tab</button>
+        </div>
+        <p class="hint"><b>Want to keep building?</b> Click <b>Copy SVG code</b>, then paste (Ctrl+V) right onto a Figma canvas. Every shoe part comes in as its own named vector layer you can reshape.</p>
+        <div class="code-box" id="codeBox" hidden>
+          <textarea id="codeTA" readonly spellcheck="false" aria-label="SVG code"></textarea>
+          <div class="row" style="margin-top:6px">
+            <button class="btn small" id="selectCodeBtn">Select all</button>
+            <button class="btn small" id="hideCodeBtn">Hide code</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: style panel -->
+    <div class="right">
+      <div class="card" id="panel"></div>
+    </div>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+"use strict";
+const NS = "http://www.w3.org/2000/svg";
+const KEY = "sneaker-lab-v1";
+
+const PALETTE = ["#ffffff","#f1f3f5","#adb5bd","#495057","#1b1b1b","#e63946",
+                 "#ff7b00","#ffd60a","#80ed99","#2a9d8f","#4cc9f0","#1d4ed8",
+                 "#14213d","#7b2cbf","#f72585","#ffafcc","#c98b4d","#6b4226"];
+const PATTERNS = [["solid","Solid"],["stripes","Stripes"],["dots","Dots"],["checker","Checker"],
+                  ["zigzag","Zigzag"],["speckle","Speckle"],["fade","Fade"]];
+
+/* ---------- Shoe geometry (side view, toe to the right) ---------- */
+const UPPER = "M92 286 C70 232 74 172 108 137 C140 116 200 126 250 140 L300 125 C380 165 470 205 560 225 C640 240 722 252 738 286 Z";
+const EY = [[319,148],[357,166],[395,183],[434,199],[474,213],[515,226]];   // eyelets
+const TP = [[329,126],[367,144],[405,161],[444,177],[484,191],[525,204]];   // lace tops
+const BOW = "M329 126 C300 96 280 110 306 124 C314 128 322 128 329 126 M329 126 C352 94 374 106 352 122 C344 128 336 128 329 126 M329 126 C322 146 312 162 300 172 M329 126 C338 148 344 162 352 176";
+
+const PARTS = [
+  {id:"pullTab", label:"Pull Tab", layer:"Pull-Tab", kind:"fill",
+   d:"M104 146 C92 122 96 100 110 96 C118 95 124 104 128 130 Z"},
+  {id:"tongue", label:"Tongue", layer:"Tongue", kind:"fill",
+   d:"M256 148 C252 122 258 100 272 90 C288 80 312 84 318 98 C322 110 316 120 306 129 Z"},
+  {id:"upper", label:"Upper", layer:"Upper", kind:"fill", d:UPPER},
+  {id:"heelCounter", label:"Heel Counter", layer:"Heel-Counter", kind:"fill", clip:true,
+   d:"M40 330 L40 120 C110 130 170 190 196 330 Z"},
+  {id:"toeCap", label:"Toe Cap", layer:"Toe-Cap", kind:"fill", clip:true,
+   d:"M612 200 C596 230 592 268 604 330 L800 330 L800 200 Z"},
+  {id:"mudguard", label:"Mudguard", layer:"Mudguard", kind:"fill", clip:true,
+   d:"M30 330 L30 262 C220 274 520 272 800 258 L800 330 Z"},
+  {id:"accent", label:"Side Wave", layer:"Side-Wave", kind:"fill", clip:true,
+   d:"M190 256 C270 196 380 258 488 210 L500 232 C390 286 280 226 204 276 Z"},
+  {id:"stitching", label:"Stitching", layer:"Stitching", kind:"stroke", clip:true,
+   paths:["M30 270 C220 282 520 280 800 266",
+          "M622 205 C606 232 603 268 614 320",
+          "M40 132 C100 142 156 198 182 320",
+          "M298 140 C378 178 468 216 556 238"]},
+  {id:"collar", label:"Collar", layer:"Collar", kind:"fill",
+   d:"M108 137 C140 116 200 126 250 140 L254 158 C205 146 150 138 118 160 Z"},
+  {id:"eyestay", label:"Eyestay", layer:"Eyestay", kind:"fill",
+   d:"M250 140 L300 125 C380 165 470 205 560 225 L552 250 C462 230 372 190 292 152 L256 162 Z"},
+  {id:"midsole", label:"Midsole", layer:"Midsole", kind:"fill",
+   d:"M66 280 L744 280 C756 292 754 312 738 316 L84 318 C60 314 56 290 66 280 Z"},
+  {id:"outsole", label:"Outsole", layer:"Outsole", kind:"fill",
+   d:"M80 314 L740 312 C748 320 744 334 730 337 L94 339 C76 337 72 322 80 314 Z"},
+  {id:"eyelets", label:"Eyelets", layer:"Eyelets", kind:"eyelets"},
+  {id:"laces", label:"Laces", layer:"Laces", kind:"laces"}
+];
+const PART = {}; PARTS.forEach(p => PART[p.id] = p);
+const LIST_ORDER = ["upper","toeCap","heelCounter","mudguard","accent","eyestay","collar","tongue",
+                    "pullTab","laces","eyelets","stitching","midsole","outsole"];
+
+/* ---------- Sticker shapes (centered on 0,0) ---------- */
+function starPath(){
+  let d = "";
+  for (let i = 0; i < 10; i++){
+    const r = i % 2 ? 13 : 30, a = -Math.PI/2 + i*Math.PI/5;
+    d += (i ? "L" : "M") + (r*Math.cos(a)).toFixed(1) + " " + (r*Math.sin(a)).toFixed(1) + " ";
+  }
+  return d + "Z";
+}
+const SHAPES = {
+  star: starPath(),
+  bolt: "M8 -32 L-16 4 L0 4 L-8 32 L18 -6 L2 -6 Z",
+  heart: "M0 24 C-30 4 -28 -22 -12 -24 C-4 -25 0 -18 0 -14 C0 -18 4 -25 12 -24 C28 -22 30 4 0 24 Z",
+  flame: "M0 30 C-20 30 -26 12 -18 -2 C-14 8 -8 8 -8 2 C-10 -12 -2 -22 6 -30 C6 -18 22 -10 22 8 C22 22 12 30 0 30 Z",
+  diamond: "M0 -28 L24 0 L0 28 L-24 0 Z",
+  chevron: "M-28 -10 L0 12 L28 -10 L28 6 L0 28 L-28 6 Z"
+};
+const STICKERS = [
+  ["star","Star","#ffd60a"],["bolt","Bolt","#ffd60a"],["heart","Heart","#f72585"],["flame","Flame","#ff7b00"],
+  ["diamond","Diamond","#4cc9f0"],["chevron","Chevron","#1d4ed8"],["circle","Circle","#e63946"],["text","Text","#1b1b1b"]
+];
+const STICKER_LABEL = {}; STICKERS.forEach(s => STICKER_LABEL[s[0]] = s[1]);
+
+/* ---------- State ---------- */
+function defaultState(){
+  const c = {pullTab:"#e63946", tongue:"#ffffff", upper:"#ffffff", heelCounter:"#14213d", toeCap:"#f1f3f5",
+             mudguard:"#e9ecef", accent:"#e63946", stitching:"#495057", collar:"#14213d", eyestay:"#14213d",
+             midsole:"#ffffff", outsole:"#c98b4d", eyelets:"#adb5bd", laces:"#ffffff"};
+  const parts = {};
+  PARTS.forEach(p => parts[p.id] = {c1:c[p.id], c2:"#1b1b1b", pattern:"solid"});
+  return {name:"", outline:true, parts, stickers:[], nextId:1};
+}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} }
+function load(){
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY));
+    if (!s || !s.parts || !Array.isArray(s.stickers)) return null;
+    const d = defaultState();
+    Object.keys(d.parts).forEach(k => { if (!s.parts[k]) s.parts[k] = d.parts[k]; });
+    if (typeof s.outline !== "boolean") s.outline = true;
+    if (!s.nextId) s.nextId = s.stickers.reduce((m,x) => Math.max(m, x.id||0), 0) + 1;
+    if (typeof s.name !== "string") s.name = "";
+    return s;
+  } catch(e){ return null; }
+}
+
+let state = load() || defaultState();
+let sel = {kind:"part", id:"upper"};
+let hist = [JSON.stringify(state)], hi = 0;
+let drag = null;
+
+function commit(){
+  const s = JSON.stringify(state);
+  if (s === hist[hi]) return;
+  hist = hist.slice(0, hi+1); hist.push(s);
+  if (hist.length > 80) hist.shift();
+  hi = hist.length - 1;
+  save(); updateUndo();
+}
+function undo(){ if (hi > 0){ hi--; state = JSON.parse(hist[hi]); fixSel(); renderAll(); save(); } }
+function redo(){ if (hi < hist.length-1){ hi++; state = JSON.parse(hist[hi]); fixSel(); renderAll(); save(); } }
+function fixSel(){ if (sel.kind === "sticker" && !findSticker(sel.id)) sel = {kind:"part", id:"upper"}; }
+function findSticker(id){ return state.stickers.find(s => s.id === id); }
+function partState(){ return state.parts[sel.id]; }
+
+/* ---------- SVG building ---------- */
+function esc(t){ return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+function patternDef(id, st){
+  const a = st.c1, b = st.c2, pid = "pat-" + id;
+  switch (st.pattern){
+    case "stripes": return `<pattern id="${pid}" patternUnits="userSpaceOnUse" width="16" height="16" patternTransform="rotate(35)"><rect width="16" height="16" fill="${a}"/><rect width="7" height="16" fill="${b}"/></pattern>`;
+    case "dots": return `<pattern id="${pid}" patternUnits="userSpaceOnUse" width="18" height="18"><rect width="18" height="18" fill="${a}"/><circle cx="9" cy="9" r="4" fill="${b}"/></pattern>`;
+    case "checker": return `<pattern id="${pid}" patternUnits="userSpaceOnUse" width="20" height="20"><rect width="20" height="20" fill="${a}"/><rect width="10" height="10" fill="${b}"/><rect x="10" y="10" width="10" height="10" fill="${b}"/></pattern>`;
+    case "zigzag": return `<pattern id="${pid}" patternUnits="userSpaceOnUse" width="24" height="14"><rect width="24" height="14" fill="${a}"/><polyline points="0,10 6,4 12,10 18,4 24,10" fill="none" stroke="${b}" stroke-width="3" stroke-linejoin="round"/></pattern>`;
+    case "speckle": {
+      const dots = [[5,7,2],[18,3,1.5],[30,12,2.5],[12,22,1.8],[26,28,2],[36,34,1.4],[6,34,2.2],[20,15,1.2]]
+        .map(([x,y,r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${b}"/>`).join("");
+      return `<pattern id="${pid}" patternUnits="userSpaceOnUse" width="40" height="40"><rect width="40" height="40" fill="${a}"/>${dots}</pattern>`;
+    }
+    case "fade": return `<linearGradient id="${pid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>`;
+  }
+  return "";
+}
+function fillOf(id){ const st = state.parts[id]; return st.pattern === "solid" ? st.c1 : `url(#pat-${id})`; }
+
+function laceD(){
+  let d = "";
+  for (let i = 0; i < EY.length-1; i++){
+    d += `M${EY[i][0]} ${EY[i][1]} L${TP[i+1][0]} ${TP[i+1][1]} M${EY[i+1][0]} ${EY[i+1][1]} L${TP[i][0]} ${TP[i][1]} `;
+  }
+  return d + BOW;
+}
+function hitPath(d, w){ return `<path d="${d}" fill="none" stroke="#000" stroke-opacity="0" stroke-width="${w}" pointer-events="stroke"/>`; }
+
+function renderPart(p, interactive){
+  const O = state.outline ? "#1b1b1b" : "none";
+  const st = state.parts[p.id];
+  const attr = interactive ? ` data-part="${p.id}" style="cursor:pointer"` : "";
+  const clip = p.clip ? ` clip-path="url(#upperClip)"` : "";
+  if (p.kind === "fill"){
+    let extra = "";
+    if (p.id === "outsole" && state.outline){
+      let t = "";
+      for (let x = 112; x <= 712; x += 24) t += `M${x} 327 L${x} 334 `;
+      extra = `<path d="${t}" fill="none" stroke="#1b1b1b" stroke-opacity=".35" stroke-width="2" stroke-linecap="round"/>`;
+    }
+    return `<g id="${p.layer}"${attr}${clip}><path d="${p.d}" fill="${fillOf(p.id)}" stroke="${O}" stroke-width="2.5" stroke-linejoin="round"/>${extra}</g>`;
+  }
+  if (p.kind === "stroke"){
+    const lines = p.paths.map(d => `<path d="${d}" fill="none" stroke="${st.c1}" stroke-width="1.8" stroke-dasharray="5 4" stroke-linecap="round"/>`).join("");
+    const hits = interactive ? p.paths.map(d => hitPath(d, 10)).join("") : "";
+    return `<g id="${p.layer}"${attr}${clip}>${lines}${hits}</g>`;
+  }
+  if (p.kind === "eyelets"){
+    const c = EY.map(([x,y]) => `<circle cx="${x}" cy="${y}" r="5" fill="${st.c1}" stroke="${O}" stroke-width="1.8"/><circle cx="${x}" cy="${y}" r="2" fill="#1b1b1b"/>`).join("");
+    return `<g id="${p.layer}"${attr}>${c}</g>`;
+  }
+  if (p.kind === "laces"){
+    const d = laceD();
+    return `<g id="${p.layer}"${attr}><path d="${d}" fill="none" stroke="${O}" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${st.c1}" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>${interactive ? hitPath(d, 14) : ""}</g>`;
+  }
+  return "";
+}
+
+function tf(s){ return `translate(${s.x} ${s.y}) rotate(${s.r}) scale(${s.s})`; }
+function stickerInner(s){
+  const O = state.outline ? "#1b1b1b" : "none";
+  if (s.type === "text"){
+    return `<text x="0" y="11" text-anchor="middle" font-family="Arial Black, Arial, Helvetica, sans-serif" font-weight="900" font-size="30" fill="${s.color}" stroke="${O}" stroke-width="1.2" paint-order="stroke">${esc(s.text || "")}</text>`;
+  }
+  if (s.type === "circle") return `<circle r="22" fill="${s.color}" stroke="${O}" stroke-width="2.5"/>`;
+  return `<path d="${SHAPES[s.type]}" fill="${s.color}" stroke="${O}" stroke-width="2.5" stroke-linejoin="round"/>`;
+}
+function renderSticker(s, n, interactive){
+  const attr = interactive ? ` data-sticker="${s.id}" style="cursor:move"` : "";
+  const name = s.type === "text" ? "Text-" + (s.text || "").replace(/[^A-Za-z0-9]+/g, "-").slice(0, 20) : STICKER_LABEL[s.type];
+  return `<g id="Sticker-${n}-${name}" transform="${tf(s)}"${attr}>${stickerInner(s)}</g>`;
+}
+
+function highlightSVG(){
+  if (sel.kind !== "part") return "";
+  const p = PART[sel.id], H = "#2f7cff";
+  const clip = p.clip ? ` clip-path="url(#upperClip)"` : "";
+  if (p.kind === "fill")
+    return `<path d="${p.d}" fill="${H}" fill-opacity=".16" stroke="${H}" stroke-width="3" stroke-dasharray="8 6" pointer-events="none"${clip}/>`;
+  if (p.kind === "stroke")
+    return `<g pointer-events="none"${clip}>${p.paths.map(d => `<path d="${d}" fill="none" stroke="${H}" stroke-opacity=".5" stroke-width="9" stroke-linecap="round"/>`).join("")}</g>`;
+  if (p.kind === "laces")
+    return `<path d="${laceD()}" fill="none" stroke="${H}" stroke-opacity=".45" stroke-width="13" stroke-linecap="round" pointer-events="none"/>`;
+  if (p.kind === "eyelets")
+    return `<g pointer-events="none">${EY.map(([x,y]) => `<circle cx="${x}" cy="${y}" r="9" fill="none" stroke="${H}" stroke-width="2.5"/>`).join("")}</g>`;
+  return "";
+}
+
+function buildSVG(interactive){
+  const O = state.outline ? "#1b1b1b" : "none";
+  let defs = `<clipPath id="upperClip"><path d="${UPPER}"/></clipPath>`;
+  PARTS.forEach(p => { if (p.kind === "fill" && state.parts[p.id].pattern !== "solid") defs += patternDef(p.id, state.parts[p.id]); });
+  let body = `<ellipse id="Shadow" cx="405" cy="342" rx="340" ry="12" fill="#000000" opacity="0.12"/>`;
+  PARTS.forEach(p => {
+    body += renderPart(p, interactive);
+    if (p.id === "stitching") body += `<path id="Upper-Outline" d="${UPPER}" fill="none" stroke="${O}" stroke-width="2.5" stroke-linejoin="round" pointer-events="none"/>`;
+  });
+  if (interactive) body += highlightSVG();
+  body += `<g id="Stickers">${state.stickers.map((s,i) => renderSticker(s, i+1, interactive)).join("")}</g>`;
+  const title = esc(state.name || "My Sneaker");
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 40 800 330" width="800" height="330"><title>${title}</title><desc>Designed in Sneaker Lab</desc><defs>${defs}</defs>${body}</svg>`;
+}
+
+/* ---------- Rendering the UI ---------- */
+const $ = id => document.getElementById(id);
+const stage = $("stage"), partsEl = $("parts"), panel = $("panel"), nameIn = $("nameIn");
+
+function renderStage(){
+  stage.innerHTML = buildSVG(true);
+  if (sel.kind === "sticker"){
+    const g = stage.querySelector(`[data-sticker="${sel.id}"]`);
+    if (g){
+      const b = g.getBBox(), pad = 6;
+      const r = document.createElementNS(NS, "rect");
+      r.setAttribute("x", b.x - pad); r.setAttribute("y", b.y - pad);
+      r.setAttribute("width", Math.max(b.width + pad*2, 12)); r.setAttribute("height", Math.max(b.height + pad*2, 12));
+      r.setAttribute("fill", "none"); r.setAttribute("stroke", "#2f7cff"); r.setAttribute("stroke-width", "2");
+      r.setAttribute("stroke-dasharray", "6 4"); r.setAttribute("vector-effect", "non-scaling-stroke");
+      r.setAttribute("pointer-events", "none");
+      g.appendChild(r);
+    }
+  }
+}
+function dotBg(id){
+  const st = state.parts[id];
+  if (PART[id].kind === "fill" && st.pattern !== "solid") return `linear-gradient(135deg, ${st.c1} 50%, ${st.c2} 50%)`;
+  return st.c1;
+}
+function renderParts(){
+  partsEl.innerHTML = LIST_ORDER.map(id => {
+    const on = sel.kind === "part" && sel.id === id;
+    return `<button class="part-btn${on ? " on" : ""}" data-sel="${id}"><span class="dot" style="background:${dotBg(id)}"></span>${PART[id].label}</button>`;
+  }).join("");
+}
+function same(a, b){ return String(a).toLowerCase() === String(b).toLowerCase(); }
+function swatches(attr, current){
+  return `<div class="swatches">${PALETTE.map(c => `<button class="sw${same(c, current) ? " on" : ""}" data-${attr}="${c}" style="background:${c}" aria-label="Color ${c}" title="${c}"></button>`).join("")}</div>`;
+}
+function renderPanel(){
+  if (sel.kind === "part"){
+    const p = PART[sel.id], st = partState();
+    let h = `<h2>Style · ${p.label}</h2><div class="label">${p.kind === "fill" ? "Main color" : "Color"}</div>${swatches("c1", st.c1)}
+      <label class="picker">Custom color <input type="color" id="pk1" value="${st.c1}"></label>`;
+    if (p.kind === "fill"){
+      h += `<div class="label">Fill style</div><div class="chips">${PATTERNS.map(([k, l]) => `<button class="chip${st.pattern === k ? " on" : ""}" data-pattern="${k}">${l}</button>`).join("")}</div>`;
+      if (st.pattern !== "solid"){
+        h += `<div class="label">Pattern color</div>${swatches("c2", st.c2)}
+          <label class="picker">Custom color <input type="color" id="pk2" value="${st.c2}"></label>`;
+      }
+    }
+    h += `<p class="hint">Tip: patterns stay vectors in the SVG, so they scale with no blur.</p>`;
+    panel.innerHTML = h;
+  } else {
+    const s = findSticker(sel.id);
+    if (!s){ sel = {kind:"part", id:"upper"}; return renderPanel(); }
+    let h = `<h2>Sticker · ${STICKER_LABEL[s.type]}</h2>`;
+    if (s.type === "text") h += `<div class="label">Your text</div><input class="text-in" id="stext" maxlength="16" value="${esc(s.text || "")}">`;
+    h += `<div class="label">Color</div>${swatches("sc", s.color)}
+      <label class="picker">Custom color <input type="color" id="skc" value="${s.color}"></label>
+      <div class="label">Size</div><input class="range" type="range" id="ssize" min="0.3" max="3" step="0.05" value="${s.s}">
+      <div class="label">Rotate</div><input class="range" type="range" id="srot" min="-180" max="180" step="1" value="${s.r}">
+      <div class="row">
+        <button class="btn small" data-act="fwd">Bring forward</button>
+        <button class="btn small" data-act="back">Send back</button>
+        <button class="btn small" data-act="dup">Duplicate</button>
+        <button class="btn small danger" data-act="del">Delete</button>
+      </div>
+      <p class="hint">Drag it on the shoe. Arrow keys nudge it (hold Shift for bigger steps). Delete key removes it.</p>`;
+    panel.innerHTML = h;
+  }
+}
+function updateUndo(){
+  $("undoBtn").disabled = hi <= 0;
+  $("redoBtn").disabled = hi >= hist.length - 1;
+  $("outlineBtn").textContent = "Outline: " + (state.outline ? "On" : "Off");
+}
+function renderAll(){ renderStage(); renderParts(); renderPanel(); nameIn.value = state.name || ""; updateUndo(); }
+
+/* sticker add buttons */
+$("stickerAdd").innerHTML = STICKERS.map(([type, label, color]) => {
+  let icon;
+  if (type === "text") icon = `<span class="aa">Aa</span>`;
+  else {
+    const shape = type === "circle" ? `<circle r="22" fill="${color}" stroke="#1b1b1b" stroke-width="3"/>`
+                                    : `<path d="${SHAPES[type]}" fill="${color}" stroke="#1b1b1b" stroke-width="3" stroke-linejoin="round"/>`;
+    icon = `<svg viewBox="-34 -34 68 68" width="26" height="26" aria-hidden="true">${shape}</svg>`;
+  }
+  return `<button class="stk" data-add="${type}" data-color="${color}" title="Add ${label}">${icon}${label}</button>`;
+}).join("");
+
+/* ---------- Interaction ---------- */
+function toast(msg){
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 3200);
+}
+function svgPt(e){
+  const svg = stage.querySelector("svg");
+  const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+  return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
+
+stage.addEventListener("pointerdown", e => {
+  const sg = e.target.closest("[data-sticker]");
+  if (sg){
+    const id = +sg.dataset.sticker, s = findSticker(id);
+    if (!s) return;
+    if (!(sel.kind === "sticker" && sel.id === id)){ sel = {kind:"sticker", id}; renderStage(); renderParts(); renderPanel(); }
+    const p = svgPt(e);
+    drag = {id, dx:p.x - s.x, dy:p.y - s.y, moved:false};
+    try { stage.setPointerCapture(e.pointerId); } catch(err){}
+    e.preventDefault();
+    return;
+  }
+  const pg = e.target.closest("[data-part]");
+  if (pg){ sel = {kind:"part", id:pg.dataset.part}; renderStage(); renderParts(); renderPanel(); }
+});
+stage.addEventListener("pointermove", e => {
+  if (!drag) return;
+  const s = findSticker(drag.id); if (!s) return;
+  const p = svgPt(e);
+  s.x = Math.round(p.x - drag.dx); s.y = Math.round(p.y - drag.dy); drag.moved = true;
+  const g = stage.querySelector(`[data-sticker="${drag.id}"]`);
+  if (g) g.setAttribute("transform", tf(s));
+});
+function endDrag(){ if (drag){ if (drag.moved){ commit(); save(); } drag = null; } }
+stage.addEventListener("pointerup", endDrag);
+stage.addEventListener("pointercancel", endDrag);
+
+partsEl.addEventListener("click", e => {
+  const b = e.target.closest("[data-sel]"); if (!b) return;
+  sel = {kind:"part", id:b.dataset.sel}; renderStage(); renderParts(); renderPanel();
+});
+
+$("stickerAdd").addEventListener("click", e => {
+  const b = e.target.closest("[data-add]"); if (!b) return;
+  const n = state.stickers.length;
+  const s = {id:state.nextId++, type:b.dataset.add, x:420 + (n % 4)*14, y:225 - (n % 4)*10, s:1, r:0, color:b.dataset.color};
+  if (s.type === "text") s.text = "FAST";
+  state.stickers.push(s);
+  sel = {kind:"sticker", id:s.id};
+  renderAll(); commit();
+});
+
+panel.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.c1){ partState().c1 = b.dataset.c1; renderAll(); commit(); }
+  else if (b.dataset.c2){ partState().c2 = b.dataset.c2; renderAll(); commit(); }
+  else if (b.dataset.pattern){
+    const st = partState(); st.pattern = b.dataset.pattern;
+    if (st.pattern !== "solid" && same(st.c1, st.c2)) st.c2 = same(st.c1, "#1b1b1b") ? "#ffffff" : "#1b1b1b";
+    renderAll(); commit();
+  }
+  else if (b.dataset.sc){ const s = findSticker(sel.id); if (s){ s.color = b.dataset.sc; renderAll(); commit(); } }
+  else if (b.dataset.act) stickerAction(b.dataset.act);
+});
+panel.addEventListener("input", e => {
+  const t = e.target;
+  if (t.id === "pk1"){ partState().c1 = t.value; renderStage(); renderParts(); }
+  else if (t.id === "pk2"){ partState().c2 = t.value; renderStage(); renderParts(); }
+  else {
+    const s = sel.kind === "sticker" && findSticker(sel.id); if (!s) return;
+    if (t.id === "skc") s.color = t.value;
+    else if (t.id === "ssize") s.s = parseFloat(t.value);
+    else if (t.id === "srot") s.r = parseInt(t.value, 10);
+    else if (t.id === "stext") s.text = t.value;
+    else return;
+    renderStage();
+  }
+});
+panel.addEventListener("change", e => {
+  const id = e.target.id;
+  commit();
+  if (id === "pk1" || id === "pk2" || id === "skc") renderPanel();
+});
+
+function stickerAction(act){
+  const i = state.stickers.findIndex(s => s.id === sel.id); if (i < 0) return;
+  const arr = state.stickers;
+  if (act === "del"){ arr.splice(i, 1); sel = {kind:"part", id:"upper"}; }
+  else if (act === "dup"){ const c = Object.assign({}, arr[i], {id:state.nextId++, x:arr[i].x + 20, y:arr[i].y + 14}); arr.splice(i+1, 0, c); sel = {kind:"sticker", id:c.id}; }
+  else if (act === "fwd" && i < arr.length-1){ [arr[i], arr[i+1]] = [arr[i+1], arr[i]]; }
+  else if (act === "back" && i > 0){ [arr[i], arr[i-1]] = [arr[i-1], arr[i]]; }
+  renderAll(); commit();
+}
+
+nameIn.addEventListener("input", () => { state.name = nameIn.value; renderStage(); });
+nameIn.addEventListener("change", commit);
+
+$("undoBtn").onclick = undo;
+$("redoBtn").onclick = redo;
+$("outlineBtn").onclick = () => { state.outline = !state.outline; renderAll(); commit(); };
+$("randomBtn").onclick = () => {
+  const pick = () => PALETTE[Math.floor(Math.random()*PALETTE.length)];
+  const pats = PATTERNS.slice(1).map(p => p[0]);
+  PARTS.forEach(p => {
+    const st = state.parts[p.id];
+    st.c1 = pick(); do { st.c2 = pick(); } while (same(st.c2, st.c1));
+    st.pattern = (p.kind === "fill" && Math.random() < 0.18) ? pats[Math.floor(Math.random()*pats.length)] : "solid";
+  });
+  renderAll(); commit(); toast("Surprise! Press Undo to get your last design back.");
+};
+$("resetBtn").onclick = () => {
+  const keepName = state.name, next = state.nextId;
+  state = defaultState(); state.name = keepName; state.nextId = next;
+  sel = {kind:"part", id:"upper"};
+  renderAll(); commit(); toast("Fresh shoe. Press Undo if you didn't mean that.");
+};
+
+document.addEventListener("keydown", e => {
+  const tag = (e.target.tagName || "").toLowerCase();
+  if (tag === "input" || tag === "textarea") return;
+  const mod = e.ctrlKey || e.metaKey;
+  if (mod && e.key.toLowerCase() === "z"){ e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+  if (mod && e.key.toLowerCase() === "y"){ e.preventDefault(); redo(); return; }
+  if (sel.kind !== "sticker") return;
+  const s = findSticker(sel.id); if (!s) return;
+  if (e.key === "Delete" || e.key === "Backspace"){ e.preventDefault(); stickerAction("del"); return; }
+  const step = e.shiftKey ? 10 : 2;
+  const mv = {ArrowLeft:[-step,0], ArrowRight:[step,0], ArrowUp:[0,-step], ArrowDown:[0,step]}[e.key];
+  if (mv){ e.preventDefault(); s.x += mv[0]; s.y += mv[1]; renderStage(); commit(); }
+});
+
+/* ---------- Export ---------- */
+function svgString(){ return '<?xml version="1.0" encoding="UTF-8"?>\n' + buildSVG(false); }
+function fileBase(){
+  return (state.name || "my-sneaker").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "my-sneaker";
+}
+function download(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+$("svgBtn").onclick = () => {
+  download(new Blob([svgString()], {type:"image/svg+xml"}), fileBase() + ".svg");
+  toast("Saving " + fileBase() + ".svg. If nothing downloads, use Copy SVG code.");
+};
+$("pngBtn").onclick = () => {
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement("canvas"); c.width = 1600; c.height = 660;
+    c.getContext("2d").drawImage(img, 0, 0, 1600, 660);
+    c.toBlob(b => { if (b){ download(b, fileBase() + ".png"); toast("Saving " + fileBase() + ".png (picture only, not a vector)."); } }, "image/png");
+  };
+  img.onerror = () => toast("PNG export didn't work here. Try Download SVG instead.");
+  img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(buildSVG(false));
+};
+$("copyBtn").onclick = async () => {
+  const code = svgString(), ta = $("codeTA");
+  ta.value = code; $("codeBox").hidden = false;
+  let ok = false;
+  try { await navigator.clipboard.writeText(code); ok = true; } catch(e){}
+  if (!ok){ ta.focus(); ta.select(); try { ok = document.execCommand("copy"); } catch(e){} }
+  toast(ok ? "SVG code copied! Paste it onto a Figma canvas with Ctrl+V." : "Click Select all, then press Ctrl+C to copy the code.");
+};
+$("selectCodeBtn").onclick = () => { const ta = $("codeTA"); ta.focus(); ta.select(); };
+$("hideCodeBtn").onclick = () => { $("codeBox").hidden = true; };
+$("openBtn").onclick = () => {
+  const url = URL.createObjectURL(new Blob([svgString()], {type:"image/svg+xml"}));
+  const w = window.open(url, "_blank");
+  if (!w) toast("Pop-up was blocked. Use Download SVG or Copy SVG code.");
+};
+
+renderAll();
+})();
+</script>
+</body>
+</html>
